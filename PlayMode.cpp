@@ -64,14 +64,13 @@ Load< Scene > hexapod_scene(LoadTagDefault, []() -> Scene const * {
 
 
 
-glm::vec3 select_destination(float *time, glm::vec3 box) 
+glm::vec3 select_destination(float *time, glm::vec3 from) 
 {
 	// from https://cplusplus.com/reference/random/mersenne_twister_engine/min/
 	 unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	 std::mt19937 generator (seed);  // mt19937 is a standard mersenne_twister_engine
 	 *time = generator()%4 + 1;
-	 return glm::vec3{generator()%15*((-2*generator()%2)+1), 
-	 				generator()%15*((-2*generator()%2)+1), 10.0f - generator()%10};
+	 return from;
 
 
 }
@@ -136,7 +135,7 @@ PlayMode::PlayMode() : scene(*hexapod_scene) {
 	person1.head->position -= glm::vec3(0.0f, 0.0f, 15.0f);
 	person1.original_pos =  person1.head->position;
 	person1.from =  person1.head->position;
-	person1.dest = select_destination(&person1.final_time, end_box->position);
+	person1.dest = person1.from + glm::vec3{-5.0f, 4.5f, 3.0f};
 	person1.collider->position = person1.head->position + person1.body->position;
 	person1.lshoulder_base_rot = person1.lshoulder->rotation;
 	person1.rshoulder_base_rot = person1.rshoulder->rotation;
@@ -147,7 +146,7 @@ PlayMode::PlayMode() : scene(*hexapod_scene) {
 	person2.head->position -= glm::vec3(0.0f, 0.0f, 10.0f);
 	person2.original_pos =  person2.head->position;
 	person2.from =  person2.head->position;
-	person2.dest = select_destination(&person2.final_time, end_box->position);
+	person2.dest = person2.dest + glm::vec3{5.0f, -4.5f, 4.0f};
 	person2.collider->position = person2.head->position + person2.body->position;
 	person2.lshoulder_base_rot = person2.lshoulder->rotation;
 	person2.rshoulder_base_rot = person2.rshoulder->rotation;
@@ -277,7 +276,9 @@ void PlayMode::update(float elapsed) {
 		if (person->curr_time >= person->final_time)
 		{
 			person->from = person->head->position;
-			person->dest = select_destination(&(person->final_time), end_box->position);
+			person->dest = select_destination(&(person->final_time),person->from);
+			person1.collider->position = person1.head->position + person1.body->position;
+
 			person->curr_time = 0.0f;
 		} else {
 			// lerp between start and end position using current time
@@ -399,10 +400,15 @@ void PlayMode::update(float elapsed) {
 			}
 			
 
-			if (sphereCollision(fish->position, fish_radius, person1.head->position+person1.body->position, person_radius))
+			for (auto person : people)
 			{
-				isDead = true;
-			} else if(abs(fish->position.x - end_box->position.x) <= 1.0f &&
+				if (sphereCollision(fish->position, fish_radius, person.head->position+person.body->position, person_radius))
+				{
+					isDead = true;
+				} 
+			}
+			
+			if(!isDead && abs(fish->position.x - end_box->position.x) <= 1.0f &&
 					abs(fish->position.y - end_box->position.y) <= 1.0f &&
 					abs(fish->position.z - end_box->position.z) <= 1.0f)
 			{
