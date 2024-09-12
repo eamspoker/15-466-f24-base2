@@ -5,7 +5,7 @@ Design: This is a stealth game where you play as a sunfish trapped in a swimming
 
 Screen Shot:
 
-![Screen Shot](screenshot.png)
+![Screen Shot](screenshot2.png)
 
 How To Play:
 
